@@ -1,13 +1,17 @@
 import axios from "axios";
 
-async function useFetch(api, req, body = {}) {
+async function useFetch(api, method, body = {}) {
     try {
-        if (!['get', 'post', 'put', 'delete', 'patch'].includes(req)) {
-            throw new Error(`Invalid HTTP method: ${req}`);
+        const config = {
+            url: `http://18.195.123.166:3001/api/tasks${api}`,
+            method,
+        };
+
+        if (method !== 'get' && method !== 'delete') {
+            config.data = body;
         }
-        const  res  = await axios[req](`http://18.195.123.166:3001/api/tasks${api}`, body);
-        console.log(res);
-        
+
+        const res = await axios.request(config);
         return res;
     } catch (error) {
         console.error("Error in useFetch:", error.message);
@@ -15,5 +19,4 @@ async function useFetch(api, req, body = {}) {
     }
 }
 
-
-export default useFetch
+export default useFetch;

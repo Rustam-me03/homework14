@@ -1,72 +1,76 @@
 import React, { useState, useEffect } from "react";
 import useFetch from "./hooks/useFetch";
 
-
 function ToDoApp() {
   const [tasks, setTasks] = useState([]);
   const [reversed, setReversed] = useState(false);
   const [title, setTitle] = useState("");
 
   useEffect(() => {
-    useFetch("/", "get").then((res) => {
-      console.log(res);
-      
+    const fetchTasks = async () => {
+      const res = await useFetch("/", "get");
       if (res?.data?.tasks) {
         setTasks(res.data.tasks);
       }
-    });
+    };
+    fetchTasks();
   }, []);
 
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmedTitle = title.trim();
     if (trimmedTitle) {
       const newTask = {
-        id: Date.now(),
         completed: false,
         title: trimmedTitle,
       };
 
-
-      useFetch(`/`, "post", newTask).then((res) => {
-        if (res.statusText == "OK") {
-          setTasks(res.data.tasks)
-        }
-      })
-
-      setTasks(reversed ? [newTask, ...tasks] : [...tasks, newTask]);
-      setTitle("");
+      const res = await useFetch("/", "post", newTask);
+      if (res?.data?.tasks) {
+        setTasks(res.data.tasks);
+        setTitle("");
+      }
     } else {
       alert("Task sarlavhasi bo'sh bo'lishi mumkin emas!");
     }
   };
 
-  const handleDelete = (id) => {
-    useFetch(`/${id}`,"delete")
+  const handleDelete = async (id) => {
+    await useFetch(`/${id}`, "delete");
     setTasks(tasks.filter((task) => task._id !== id));
   };
 
-  const handleEdit = (id) => {
-    const taskToEdit = tasks.find((task) => task.id === id);
+  const handleEdit = async (id) => {
+    const taskToEdit = tasks.find((task) => task._id === id);
     if (!taskToEdit) return;
     const newTitle = prompt("Sarlavhani yangilang:", taskToEdit.title);
     if (newTitle !== null && newTitle.trim() !== "") {
-      setTasks(
-        tasks.map((task) =>
-          task.id === id ? { ...task, title: newTitle.trim() } : task
-        )
-      );
+      const res = await useFetch(`/${id}`, "put", { title: newTitle.trim() });
+      if (res?.data?.updatedTask) {
+        setTasks(
+          tasks.map((task) =>
+            task._id === id ? { ...task, title: newTitle.trim() } : task
+          )
+        );
+      }
     } else if (newTitle !== null) {
       alert("Sarlavha bo'sh bo'lishi mumkin emas!");
     }
   };
 
-  const handleToggleComplete = (id) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const handleToggleComplete = async (id) => {
+    const targetTask = tasks.find((t) => t._id === id);
+    const res = await useFetch(`/${id}`, "put", {
+      completed: !targetTask.completed,
+    });
+    if (res?.data?.updatedTask) {
+      setTasks(
+        tasks.map((task) =>
+          task._id === id
+            ? { ...task, completed: !task.completed }
+            : task
+        )
+      );
+    }
   };
 
   const handleInputKeyDown = (e) => {
@@ -76,7 +80,7 @@ function ToDoApp() {
   };
 
   useEffect(() => {
-    setTasks((currentTasks) => [...currentTasks].reverse());
+    setTasks((prev) => [...prev].reverse());
   }, [reversed]);
 
   const isAddButtonDisabled = title.trim() === "";
@@ -85,7 +89,6 @@ function ToDoApp() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
         <div className="p-4 sm:p-6 md:p-8">
-          {" "}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-gray-800 mb-4 sm:mb-6">
             My Tasks
           </h1>
@@ -116,14 +119,13 @@ function ToDoApp() {
                   ? "bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400"
                   }`}
-                onClick={() => setReversed((prevReversed) => !prevReversed)}
+                onClick={() => setReversed((prev) => !prev)}
               >
                 {reversed ? "Order: Reversed" : "Order: Normal"}
               </button>
             </div>
           )}
           <div className="space-y-3 sm:space-y-4">
-            {" "}
             {tasks.length === 0 ? (
               <p className="text-center text-gray-500 py-6 text-base sm:text-lg">
                 Empty!
