@@ -1,191 +1,85 @@
-import React, { useState, useEffect } from "react";
-import useFetch from "./hooks/useFetch";
+import React from "react";
 
-function ToDoApp() {
-  const [tasks, setTasks] = useState([]);
-  const [reversed, setReversed] = useState(false);
-  const [title, setTitle] = useState("");
+const articles = [
+  { title: "Here are some things you should know regarding how we work", image: "/cat1.png" },
+  { title: "Granny gives everyone the finger, and other tips from OFFF Barcelona", image: "/cat1.png" },
+  { title: "Hello world, or, in other words, why this blog exists", image: "/cat1.png" },
+  { title: "Clients are part of the team", image: "/cat1.png" },
+  { title: "Connecting AI with digital product design", image: "/cat1.png" },
+  { title: "It's all about finding the perfect balance", image: "/cat1.png" },
+  { title: "I believe learning is the most important skill", image: "/cat1.png" },
+  { title: "Clients are part of the team", image: "/cat1.png" },
+  { title: "Here are some things you should know regarding how we work", image: "/cat1.png" },
+  { title: "How modern remote working tools get along with Old School Cowboy's methods", image: "/cat1.png" },
+];
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const res = await useFetch("/", "get");
-      if (res?.data?.tasks) {
-        setTasks(res.data.tasks);
-      }
-    };
-    fetchTasks();
-  }, []);
-
-  const handleAdd = async () => {
-    const trimmedTitle = title.trim();
-    if (trimmedTitle) {
-      const newTask = {
-        completed: false,
-        title: trimmedTitle,
-      };
-
-      const res = await useFetch("/", "post", newTask);
-      if (res?.data?.tasks) {
-        setTasks(res.data.tasks);
-        setTitle("");
-      }
-    } else {
-      alert("Task sarlavhasi bo'sh bo'lishi mumkin emas!");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    await useFetch(`/${id}`, "delete");
-    setTasks(tasks.filter((task) => task._id !== id));
-  };
-
-  const handleEdit = async (id) => {
-    const taskToEdit = tasks.find((task) => task._id === id);
-    if (!taskToEdit) return;
-    const newTitle = prompt("Sarlavhani yangilang:", taskToEdit.title);
-    if (newTitle !== null && newTitle.trim() !== "") {
-      const res = await useFetch(`/${id}`, "put", { title: newTitle.trim() });
-      if (res?.data?.updatedTask) {
-        setTasks(
-          tasks.map((task) =>
-            task._id === id ? { ...task, title: newTitle.trim() } : task
-          )
-        );
-      }
-    } else if (newTitle !== null) {
-      alert("Sarlavha bo'sh bo'lishi mumkin emas!");
-    }
-  };
-
-  const handleToggleComplete = async (id) => {
-    const targetTask = tasks.find((t) => t._id === id);
-    const res = await useFetch(`/${id}`, "put", {
-      completed: !targetTask.completed,
-    });
-    if (res?.data?.updatedTask) {
-      setTasks(
-        tasks.map((task) =>
-          task._id === id
-            ? { ...task, completed: !task.completed }
-            : task
-        )
-      );
-    }
-  };
-
-  const handleInputKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleAdd();
-    }
-  };
-
-  useEffect(() => {
-    setTasks((prev) => [...prev].reverse());
-  }, [reversed]);
-
-  const isAddButtonDisabled = title.trim() === "";
-
+export default function NordicRosePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
-        <div className="p-4 sm:p-6 md:p-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-gray-800 mb-4 sm:mb-6">
-            My Tasks
-          </h1>
-          <div className="flex flex-col sm:flex-row gap-3 mb-5 sm:mb-6">
-            <input
-              className="flex-grow p-2.5 sm:p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-              placeholder="Add a new task..."
-            />
-            <button
-              className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg text-white font-semibold transition duration-200 ease-in-out shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 text-sm sm:text-base ${isAddButtonDisabled
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500"
-                }`}
-              onClick={handleAdd}
-              disabled={isAddButtonDisabled}
-            >
-              Add Task
-            </button>
-          </div>
-          {tasks.length > 0 && (
-            <div className="text-right mb-4">
-              <button
-                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition duration-200 ease-in-out shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${reversed
-                  ? "bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400"
-                  }`}
-                onClick={() => setReversed((prev) => !prev)}
-              >
-                {reversed ? "Order: Reversed" : "Order: Normal"}
-              </button>
-            </div>
-          )}
-          <div className="space-y-3 sm:space-y-4">
-            {tasks.length === 0 ? (
-              <p className="text-center text-gray-500 py-6 text-base sm:text-lg">
-                Empty!
-              </p>
-            ) : (
-              tasks.map((task) => (
-                <div
-                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 rounded-lg shadow transition duration-300 ease-in-out ${task.completed
-                    ? "bg-green-50 border border-green-200 opacity-70"
-                    : "bg-white border border-gray-200 hover:shadow-md"
-                    }`}
-                  key={task._id}
-                >
-                  <p
-                    className={`w-full sm:flex-grow text-gray-800 break-words text-sm sm:text-base ${task.completed ? "line-through text-gray-500" : ""
-                      }`}
-                  >
-                    {task.title}
-                  </p>
+    <div className="font-sans text-black bg-white">
+      {/* Top Bar */}
+      <header className="flex justify-between items-center px-6 py-4 border-b">
+        <h1 className="text-xl font-semibold">NORDIC ROSE</h1>
+        <nav className="hidden md:flex gap-8 text-sm font-medium">
+          <a href="#">BLOG</a>
+          <a href="#">ABOUT</a>
+          <a href="#">LINKS</a>
+          <a href="#">PROJECTS</a>
+        </nav>
+        <button className="md:hidden">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </header>
 
-                  <div className="w-full sm:w-auto flex justify-end items-center gap-2 flex-shrink-0">
-                    {!task.completed && (
-                      <>
-                        <button
-                          className="px-2 py-1 text-xs sm:px-3 sm:text-sm bg-green-500 hover:bg-green-600 border border-green-600 rounded text-white shadow-sm transition duration-150"
-                          onClick={() => handleToggleComplete(task._id)}
-                        >
-                          Complete
-                        </button>
-                        <button
-                          className="px-2 py-1 text-xs sm:px-3 sm:text-sm bg-yellow-400 hover:bg-yellow-500 border border-yellow-500 rounded text-white shadow-sm transition duration-150"
-                          onClick={() => handleEdit(task._id)}
-                        >
-                          Edit
-                        </button>
-                      </>
-                    )}
-                    {task.completed && (
-                      <button
-                        className="px-2 py-1 text-xs sm:px-3 sm:text-sm bg-gray-500 hover:bg-gray-600 border border-gray-600 rounded text-white shadow-sm transition duration-150"
-                        onClick={() => handleToggleComplete(task._id)}
-                      >
-                        Undo
-                      </button>
-                    )}
-                    <button
-                      className="px-2 py-1 text-xs sm:px-3 sm:text-sm bg-red-500 hover:bg-red-600 border border-red-600 rounded text-white shadow-sm transition duration-150"
-                      onClick={() => handleDelete(task._id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      {/* Featured Post */}
+      <section className="text-center px-4 py-8">
+        <img src="/cat1.png" alt="Featured" className="mx-auto mb-6 max-w-md" />
+        <h2 className="text-2xl md:text-3xl font-bold mb-4 leading-tight">
+          A few words about this blog platform, Ghost, and how this site was made
+        </h2>
+        <p className="text-xs text-gray-500 mb-2">
+          Why Ghost (& Figma) Instead of Medium, WordPress or other options?
+        </p>
+        <hr className="w-16 mx-auto border-black my-6" />
+        <h3 className="text-xl font-semibold">All articles</h3>
+      </section>
+
+      {/* Articles */}
+      <section className="px-6 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+          {articles.map((article, index) => (
+            <div key={index} className="text-center hover:scale-[1.02] transition-transform duration-200">
+              <img src={article.image} alt={article.title} className="mb-2 w-full rounded-md" />
+              <p className="text-sm font-medium">{article.title}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black text-white text-center px-6 py-10 mt-10">
+        <div className="flex flex-wrap justify-center gap-4 text-xs uppercase tracking-wider mb-6">
+          <a href="#" className="hover:underline">Digital Product Design</a>
+          <a href="#" className="hover:underline">Remote Work</a>
+          <a href="#" className="hover:underline">UX Design</a>
+          <a href="#" className="hover:underline">Distributed Teams</a>
+          <a href="#" className="hover:underline">Creativity</a>
+          <a href="#" className="hover:underline">Strategy</a>
+          <a href="#" className="hover:underline">Suspense</a>
+          <a href="#" className="hover:underline">Growth</a>
+        </div>
+        <p className="text-sm text-gray-400 mb-4">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis eu velit tempus erat egestas efficitur.
+        </p>
+        <div className="flex justify-center gap-6 text-sm mb-4">
+          <a href="#" className="hover:underline">Twitter</a>
+          <a href="#" className="hover:underline">LinkedIn</a>
+          <a href="#" className="hover:underline">RSS</a>
+        </div>
+        <p className="text-xs text-gray-500">© 2015-2025 Nordic Rose Co. All rights reserved.</p>
+      </footer>
     </div>
   );
 }
-
-export default ToDoApp;
